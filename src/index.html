@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>时间计算器 · 跨天 & 0.00=24.00</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background: linear-gradient(145deg, #1e2b3a 0%, #0f1a24 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      padding: 16px;
+    }
+    .calculator {
+      background: rgba(22, 34, 48, 0.9);
+      backdrop-filter: blur(8px);
+      border-radius: 42px;
+      box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.8), inset 0 1px 2px rgba(255, 255, 255, 0.08);
+      padding: 28px 24px 32px;
+      width: 100%;
+      max-width: 680px;
+      border: 1px solid rgba(120, 170, 220, 0.2);
+    }
+    h2 {
+      text-align: center;
+      margin: 0 0 16px 0;
+      font-weight: 400;
+      font-size: 1.7rem;
+      letter-spacing: 2px;
+      color: #b8d4f0;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    h2 span {
+      background: #2c4056;
+      padding: 4px 12px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #aac8e6;
+      letter-spacing: 0.5px;
+      border: 1px solid #3f5d7a;
+    }
+    .display-panel {
+      background: #0b1219;
+      border-radius: 28px;
+      padding: 18px 22px;
+      margin-bottom: 24px;
+      box-shadow: inset 0 6px 10px rgba(0, 0, 0, 0.6), 0 2px 0 #2b3e52;
+      border-bottom: 1px solid #2a4055;
+    }
+    .time-display {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: #e0f0ff;
+      font-size: 2.4rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 12px rgba(80, 180, 255, 0.4);
+    }
+    .time-display .unit {
+      font-size: 1rem;
+      font-weight: 400;
+      color: #7d9ebd;
+      margin: 0 2px;
+      letter-spacing: 0;
+    }
+    .display-sub {
+      font-size: 0.95rem;
+      text-align: center;
+      color: #7e9fbf;
+      margin-top: 8px;
+      min-height: 1.4em;
+      border-top: 1px dashed #233241;
+      padding-top: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+    .input-section {
+      background: #17232e;
+      border-radius: 28px;
+      padding: 24px 20px 20px;
+      margin-bottom: 18px;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.6), 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .input-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .input-header label {
+      color: #aac3da;
+      font-size: 1rem;
+      letter-spacing: 0.3px;
+      font-weight: 400;
+    }
+    .input-header .badge {
+      background: #1f3b52;
+      color: #9fc7ed;
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 0.78rem;
+      border: 1px solid #2f5a7a;
+      letter-spacing: 0.5px;
+    }
+    .input-header .badge strong {
+      color: #d4ecff;
+      font-weight: 600;
+    }
+    .textarea-wrapper {
+      background: #0e1a24;
+      border-radius: 24px;
+      padding: 4px;
+      border: 1px solid #2c465e;
+      transition: 0.15s;
+    }
+    .textarea-wrapper:focus-within {
+      border-color: #4d8fc0;
+      box-shadow: 0 0 0 2px rgba(77, 143, 192, 0.3);
+    }
+    textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: #ecf5ff;
+      font-size: 1.1rem;
+      padding: 16px 18px;
+      outline: none;
+      font-variant-numeric: tabular-nums;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      resize: vertical;
+      min-height: 110px;
+      line-height: 1.6;
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    }
+    textarea::placeholder {
+      color: #49647e;
+      font-size: 0.95rem;
+      font-weight: 300;
+      letter-spacing: 0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    .hint-text {
+      font-size: 0.78rem;
+      color: #5a7a99;
+      margin: 8px 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .hint-text kbd {
+      background: #1d3142;
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid #2e4a62;
+      font-size: 0.72rem;
+      font-family: inherit;
+      color: #aac8e6;
+      font-weight: 500;
+    }
+    .parse-list {
+      margin: 14px 4px 4px;
+      max-height: 180px;
+      overflow-y: auto;
+      border-radius: 16px;
+      background: #0f1b26;
+      border: 1px solid #1e3040;
+    }
+    .parse-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .parse-list::-webkit-scrollbar-thumb {
+      background: #2e4a62;
+      border-radius: 10px;
+    }
+    .parse-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      font-size: 0.88rem;
+      color: #9fbdd9;
+      border-bottom: 1px solid #1a2b3a;
+      font-variant-numeric: tabular-nums;
+    }
+    .parse-item:last-child {
+      border-bottom: none;
+    }
+    .parse-item .idx {
+      color: #5f809e;
+      font-size: 0.78rem;
+      min-width: 26px;
+    }
+    .parse-item .range {
+      color: #b8d4f0;
+      font-weight: 500;
+      flex: 1;
+      margin: 0 8px;
+    }
+    .parse-item .dur {
+      color: #ffcb7a;
+      font-weight: 500;
+      background: #2a2216;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+    .parse-item .crossday {
+      display: inline-block;
+      margin-left: 6px;
+      font-size: 0.7rem;
+      color: #7ec8ff;
+      background: #1a2a38;
+      padding: 1px 6px;
+      border-radius: 10px;
+      vertical-align: middle;
+      letter-spacing: 0;
+    }
+    .parse-item .endday {
+      display: inline-block;
+      margin-left: 6px;
+      font-size: 0.7rem;
+      color: #ffd47e;
+      background: #3a2e16;
+      padding: 1px 6px;
+      border-radius: 10px;
+      vertical-align: middle;
+      letter-spacing: 0;
+    }
+    .parse-item.error {
+      color: #ff9f9f;
+    }
+    .parse-item.error .dur {
+      background: #3a1a1a;
+      color: #ffb3b3;
+    }
+    .op-buttons {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      margin: 18px 0 8px;
+      flex-wrap: wrap;
+    }
+    .op-btn {
+      background: #233b52;
+      border: none;
+      color: #d6ecff;
+      font-size: 1.3rem;
+      font-weight: 500;
+      height: 58px;
+      border-radius: 40px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #0f1a24, 0 8px 12px rgba(0,0,0,0.4);
+      transition: all 0.07s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #3c5d7c;
+      letter-spacing: 1px;
+    }
+    .op-btn:active {
+      transform: translateY(5px);
+      box-shadow: 0 2px 0 #0f1a24, 0 5px 10px rgba(0,0,0,0.5);
+    }
+    .op-btn.calc-btn {
+      background: #2a6b9e;
+      padding: 0 32px;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      color: #ffffff;
+      box-shadow: 0 6px 0 #164162, 0 8px 12px rgba(0,0,0,0.4);
+    }
+    .op-btn.calc-btn:active {
+      box-shadow: 0 2px 0 #164162, 0 5px 10px rgba(0,0,0,0.5);
+    }
+    .op-btn.reset-btn {
+      background: #374956;
+      padding: 0 26px;
+      font-size: 1rem;
+      letter-spacing: 1.5px;
+      color: #cbdae8;
+    }
+    .unit-convert-section {
+      background: #17232e;
+      border-radius: 28px;
+      padding: 14px 18px 18px;
+      margin-top: 18px;
+    }
+    .convert-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      color: #8fb3d6;
+      font-size: 0.95rem;
+      letter-spacing: 0.8px;
+      border-bottom: 1px solid #253b4e;
+      padding-bottom: 8px;
+    }
+    .convert-header span:first-child {
+      font-weight: 500;
+      color: #b8d6f5;
+    }
+    .unit-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .unit-btn {
+      background: #1d2f3f;
+      border: 1px solid #2e4a62;
+      color: #b8d1e9;
+      padding: 12px 16px;
+      border-radius: 40px;
+      font-size: 0.95rem;
+      font-weight: 400;
+      cursor: pointer;
+      flex: 1 1 auto;
+      transition: 0.1s;
+      box-shadow: 0 3px 0 #0d151e;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+    .unit-btn:active {
+      transform: translateY(3px);
+      box-shadow: none;
+    }
+    .unit-btn:hover {
+      background: #26445c;
+      border-color: #4b789b;
+    }
+    .error-msg {
+      color: #ff9f9f;
+      font-size: 0.9rem;
+      text-align: center;
+      min-height: 1.6em;
+      margin-top: 6px;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+    }
+    .footer-note {
+      text-align: center;
+      color: #42607c;
+      font-size: 0.75rem;
+      margin-top: 12px;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <h2>⏱️ 时间计算器 <span>0.00 = 24.00 · 跨天</span></h2>
+
+    <!-- 主显示区 -->
+    <div class="display-panel">
+      <div class="time-display" id="timeDisplay">
+        00<span class="unit">时</span>00<span class="unit">分</span>00<span class="unit">秒</span>
+      </div>
+      <div class="display-sub" id="subDisplay">
+        总计 0.00 秒 / 0.000 分钟 / 0.00000 小时
+      </div>
+    </div>
+
+    <!-- 输入区: 多行时间段 -->
+    <div class="input-section">
+      <div class="input-header">
+        <label>时间段列表</label>
+        <span class="badge"><strong id="lineCount">1</strong> 行 · 每行一个时间段</span>
+      </div>
+
+      <div class="textarea-wrapper">
+        <textarea id="rangeInput" placeholder="每行输入一个时间段，例如：
+13.20-0.00   (0.00 自动视为 24.00)
+20.50-7.15   (结束<开始 → 跨天)
+15.00-18.50" spellcheck="false"></textarea>
+      </div>
+
+      <div class="hint-text">
+        <span>💡</span>
+        <span><kbd>Shift</kbd> + <kbd>Enter</kbd> 换行</span>
+        <span>·</span>
+        <span><kbd>Enter</kbd>（小键盘）或 <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 计算</span>
+        <span>·</span>
+        <span>结束 <code>0.00</code> → 按 <code>24.00</code> 处理</span>
+      </div>
+
+      <!-- 解析结果列表 -->
+      <div class="parse-list" id="parseList"></div>
+
+      <!-- 按钮 -->
+      <div class="op-buttons">
+        <button class="op-btn calc-btn" id="calcBtn" title="计算所有时间段总时长">计算</button>
+        <button class="op-btn reset-btn" id="resetBtn" title="清空所有输入">↺ 清零</button>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <!-- 单位换算 -->
+    <div class="unit-convert-section">
+      <div class="convert-header">
+        <span>⚡ 快速换算</span>
+        <span>基于当前总时长</span>
+      </div>
+      <div class="unit-buttons">
+        <button class="unit-btn" data-unit="seconds">总秒数</button>
+        <button class="unit-btn" data-unit="minutes">总分钟</button>
+        <button class="unit-btn" data-unit="hours">总小时</button>
+        <button class="unit-btn" data-unit="days">总天数</button>
+      </div>
+    </div>
+    <div class="footer-note">每行一个时间段，自动累加 · 0.00 识别为 24.00 · 跨天自动识别</div>
+  </div>
+
+  <script>
+    (function(){
+      // ---------- DOM ----------
+      const rangeInput = document.getElementById('rangeInput');
+      const parseList = document.getElementById('parseList');
+      const displayDiv = document.getElementById('timeDisplay');
+      const subDisplay = document.getElementById('subDisplay');
+      const errorMsg = document.getElementById('errorMsg');
+      const lineCount = document.getElementById('lineCount');
+      const calcBtn = document.getElementById('calcBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const unitBtns = document.querySelectorAll('.unit-btn');
+
+      let currentTotalSeconds = 0;
+
+      // ---------- 工具 ----------
+      function formatHMS(totalSec, withSign = false) {
+        const sign = totalSec < 0 ? '-' : '';
+        let absSec = Math.abs(Math.round(totalSec));
+        const h = Math.floor(absSec / 3600);
+        const m = Math.floor((absSec % 3600) / 60);
+        const s = absSec % 60;
+        const hh = String(h).padStart(2, '0');
+        const mm = String(m).padStart(2, '0');
+        const ss = String(s).padStart(2, '0');
+        return withSign ? `${sign}${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
+      }
+
+      function formatShort(totalSec) {
+        const sign = totalSec < 0 ? '-' : '';
+        let absSec = Math.abs(Math.round(totalSec));
+        const h = Math.floor(absSec / 3600);
+        const m = Math.floor((absSec % 3600) / 60);
+        const s = absSec % 60;
+        let parts = [];
+        if (h > 0) parts.push(`${h}时`);
+        if (m > 0 || (h > 0 && s === 0)) parts.push(`${m}分`);
+        if (s > 0 || parts.length === 0) parts.push(`${s}秒`);
+        return sign + parts.join('');
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(/[&<>"]/g, function(c) {
+          return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+        });
+      }
+
+      // ---------- 解析 ----------
+      function parseTimeValue(str) {
+        if (!str) return { seconds: 0, error: '空值' };
+        let normalized = str.trim().replace(/:/g, '.');
+        const parts = normalized.split('.');
+        if (parts.length > 3) return { seconds: 0, error: `格式错误` };
+        let h = 0, m = 0, s = 0;
+        for (let i = 0; i < parts.length; i++) {
+          const val = parts[i];
+          if (val === '') continue;
+          const num = Number(val);
+          if (isNaN(num)) return { seconds: 0, error: `无效数字 "${val}"` };
+          if (i === 0) h = num;
+          else if (i === 1) m = num;
+          else if (i === 2) s = num;
+        }
+        return { seconds: h * 3600 + m * 60 + s, error: null };
+      }
+
+      // 核心: 解析单行时间段
+      // 规则:
+      //  1. 如果结束时间为 "0.00" 或 "0:00" 等 → 视为 24:00 (即 86400 秒)
+      //  2. 如果结束时间(数值) < 开始时间(数值) → 跨天, 加 24h
+      function parseRangeLine(line) {
+        if (!line || line.trim() === '') return { error: '空行' };
+        const trimmed = line.trim().replace(/\s+/g, '');
+        const sepMatch = trimmed.match(/^([^-~–]+)[-~–]([^-~–]+)$/);
+        if (!sepMatch) {
+          const single = parseTimeValue(trimmed);
+          if (single.error) return { error: `格式无效` };
+          return {
+            startSeconds: 0,
+            endSeconds: single.seconds,
+            diffSeconds: single.seconds,
+            startStr: '00:00',
+            endStr: formatHMS(single.seconds),
+            raw: line,
+            crossDay: false,
+            endIsMidnight: false
+          };
+        }
+
+        const startStrRaw = sepMatch[1];
+        const endStrRaw = sepMatch[2];
+        const start = parseTimeValue(startStrRaw);
+        const end = parseTimeValue(endStrRaw);
+        if (start.error) return { error: `开始: ${start.error}` };
+        if (end.error) return { error: `结束: ${end.error}` };
+
+        // 检测结束时间是否为 "0.00" 等 (归一化后视为0)
+        const normalizedEnd = endStrRaw.trim().replace(/:/g, '.').replace(/^0+(?=\d)/, '');
+        const isMidnight = (normalizedEnd === '0' || normalizedEnd === '0.0' || normalizedEnd === '0.00' ||
+                            normalizedEnd === '00' || normalizedEnd === '00.0' || normalizedEnd === '00.00' ||
+                            end.seconds === 0);
+
+        let endSeconds = end.seconds;
+        let crossDay = false;
+        let endIsMidnight = false;
+
+        if (isMidnight && start.seconds > 0) {
+          // 0.00 视为 24:00 (当天结束)
+          endSeconds = 24 * 3600;
+          endIsMidnight = true;
+        } else if (endSeconds < start.seconds) {
+          // 普通跨天: 加 24h
+          endSeconds += 24 * 3600;
+          crossDay = true;
+        }
+
+        const diffSeconds = endSeconds - start.seconds;
+
+        // 显示用的结束时间字符串
+        let displayEndStr;
+        if (endIsMidnight) {
+          displayEndStr = '24:00';
+        } else {
+          displayEndStr = formatHMS(end.seconds);
+        }
+
+        return {
+          startSeconds: start.seconds,
+          endSeconds: endSeconds,
+          diffSeconds: diffSeconds,
+          startStr: formatHMS(start.seconds),
+          endStr: displayEndStr,
+          raw: line,
+          crossDay: crossDay,
+          endIsMidnight: endIsMidnight
+        };
+      }
+
+      // ---------- 渲染 ----------
+      function renderParseList(items) {
+        parseList.innerHTML = '';
+        if (!items || items.length === 0) {
+          parseList.style.display = 'none';
+          return;
+        }
+        parseList.style.display = 'block';
+        items.forEach((item, idx) => {
+          const div = document.createElement('div');
+          div.className = 'parse-item' + (item.error ? ' error' : '');
+          if (item.error) {
+            div.innerHTML = `<span class="idx">${idx+1}.</span>
+                             <span class="range">${escapeHtml(item.raw || '')}</span>
+                             <span class="dur">${escapeHtml(item.error)}</span>`;
+          } else {
+            let badge = '';
+            if (item.endIsMidnight) {
+              badge = '<span class="endday">24:00</span>';
+            } else if (item.crossDay) {
+              badge = '<span class="crossday">+1天</span>';
+            }
+            div.innerHTML = `<span class="idx">${idx+1}.</span>
+                             <span class="range">${item.startStr} → ${item.endStr}${badge}</span>
+                             <span class="dur">${formatShort(item.diffSeconds)}</span>`;
+          }
+          parseList.appendChild(div);
+        });
+      }
+
+      function updateDisplay(totalSec) {
+        currentTotalSeconds = totalSec;
+        const sign = totalSec < 0 ? '- ' : '';
+        let absSec = Math.abs(Math.round(totalSec));
+        const h = Math.floor(absSec / 3600);
+        const m = Math.floor((absSec % 3600) / 60);
+        const s = absSec % 60;
+        const hh = String(h).padStart(2, '0');
+        const mm = String(m).padStart(2, '0');
+        const ss = String(s).padStart(2, '0');
+        displayDiv.innerHTML = `${sign}${hh}<span class="unit">时</span>${mm}<span class="unit">分</span>${ss}<span class="unit">秒</span>`;
+
+        const absExact = Math.abs(totalSec);
+        const totalMinutes = absExact / 60;
+        const totalHours = absExact / 3600;
+        const signSub = totalSec < 0 ? '负 ' : '';
+        subDisplay.innerHTML = `${signSub}总计 ${absExact.toFixed(2)} 秒 / ${totalMinutes.toFixed(3)} 分钟 / ${totalHours.toFixed(5)} 小时`;
+      }
+
+      // ---------- 核心计算 ----------
+      function calculateAll() {
+        clearError();
+        const rawText = rangeInput.value;
+        const lines = rawText.split('\n').filter(l => l.trim() !== '');
+        lineCount.textContent = Math.max(lines.length, 1);
+
+        if (lines.length === 0) {
+          showError('请输入至少一个时间段，例如 13.20-0.00');
+          renderParseList([]);
+          updateDisplay(0);
+          return;
+        }
+
+        const parsedItems = [];
+        let totalSeconds = 0;
+        let hasError = false;
+
+        lines.forEach(line => {
+          const parsed = parseRangeLine(line);
+          if (parsed.error) {
+            parsedItems.push({ error: parsed.error, raw: line });
+            hasError = true;
+          } else {
+            parsedItems.push(parsed);
+            totalSeconds += parsed.diffSeconds;
+          }
+        });
+
+        renderParseList(parsedItems);
+        updateDisplay(totalSeconds);
+        if (hasError) showError('部分行解析失败，请检查红色标记项');
+      }
+
+      function reset() {
+        clearError();
+        rangeInput.value = '';
+        renderParseList([]);
+        updateDisplay(0);
+        lineCount.textContent = '1';
+      }
+
+      function showError(msg) {
+        errorMsg.textContent = msg;
+        setTimeout(() => { errorMsg.textContent = ''; }, 4000);
+      }
+      function clearError() {
+        errorMsg.textContent = '';
+      }
+
+      // ---------- 单位换算 ----------
+      function handleUnitConvert(unit) {
+        const absSec = Math.abs(currentTotalSeconds);
+        const sign = currentTotalSeconds < 0 ? '负 ' : '';
+        let message = '';
+        switch (unit) {
+          case 'seconds': message = `${sign}${absSec.toFixed(2)} 秒`; break;
+          case 'minutes': message = `${sign}${(absSec / 60).toFixed(4)} 分钟`; break;
+          case 'hours': message = `${sign}${(absSec / 3600).toFixed(6)} 小时`; break;
+          case 'days': message = `${sign}${(absSec / 86400).toFixed(8)} 天`; break;
+          default: return;
+        }
+        const originalSub = subDisplay.innerHTML;
+        subDisplay.innerHTML = `换算结果: ${message}`;
+        setTimeout(() => {
+          const absExact = Math.abs(currentTotalSeconds);
+          const totalMinutes = absExact / 60;
+          const totalHours = absExact / 3600;
+          const signSub = currentTotalSeconds < 0 ? '负 ' : '';
+          subDisplay.innerHTML = `${signSub}总计 ${absExact.toFixed(2)} 秒 / ${totalMinutes.toFixed(3)} 分钟 / ${totalHours.toFixed(5)} 小时`;
+        }, 3000);
+      }
+
+      // ---------- 事件绑定 ----------
+      calcBtn.addEventListener('click', calculateAll);
+      resetBtn.addEventListener('click', reset);
+
+      rangeInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const isNumpadEnter = e.code === 'NumpadEnter';
+          const isCtrlEnter = e.ctrlKey || e.metaKey;
+          if (isNumpadEnter || isCtrlEnter) {
+            e.preventDefault();
+            calculateAll();
+            return;
+          }
+          if (e.shiftKey) return; // Shift+Enter 默认换行
+        }
+      });
+
+      rangeInput.addEventListener('input', () => {
+        const lines = rangeInput.value.split('\n').filter(l => l.trim() !== '');
+        lineCount.textContent = Math.max(lines.length, 1);
+        clearError();
+      });
+
+      unitBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const unit = e.currentTarget.dataset.unit;
+          if (unit) handleUnitConvert(unit);
+        });
+      });
+
+      // ---------- 初始化: 清空输入, 显示0 ----------
+      (function init() {
+        rangeInput.value = '';                // 清空输入框
+        renderParseList([]);                  // 清空解析列表
+        updateDisplay(0);                     // 显示 0
+        lineCount.textContent = '1';          // 行数显示1(空行)
+      })();
+
+    })();
+  </script>
+</body>
+</html>
